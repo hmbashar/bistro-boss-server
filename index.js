@@ -2,6 +2,7 @@ const express = require('express');
 const app = express();
 const cors = require('cors');
 require('dotenv').config()
+const {ObjectId} = require('mongodb');
 //middleware
 app.use(cors());
 app.use(express.json());
@@ -27,11 +28,18 @@ async function run() {
   try {
     // Connect the client to the server	(optional starting in v4.7)
     await client.connect();
+    const userCollection = client.db("Bistro").collection("Users");
     const menuCollection = client.db("Bistro").collection("Menu");
     const ReviewsCollection = client.db("Bistro").collection("Reviews");
     const CartCollection = client.db("Bistro").collection("Carts");
 
-    
+    //post user
+    app.post('/users', async(req, res) => {
+      const user = req.body;
+      const result = await userCollection.insertOne(user);
+      res.send(result)
+    })
+
     app.get('/menu', async(req, res) => {
         const result = await menuCollection.find().toArray();
         res.send(result);
@@ -55,6 +63,14 @@ async function run() {
       const email = req.query.email;
       const query = {email: email};
       const result = await CartCollection.find(query).toArray();      
+      res.send(result);
+    })
+
+    //delete item from cart collection
+    app.delete('/carts/:id', async(req, res) => {
+      const id = req.params.id;
+      const query = {_id: new ObjectId(id)}
+      const result = await CartCollection.deleteOne(query);
       res.send(result);
     })
 
